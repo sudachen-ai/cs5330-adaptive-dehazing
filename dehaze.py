@@ -40,7 +40,8 @@ def dcp(image, patch=15, omega=0.95, t_min=0.1, radius=20, eps=1e-3):
     return np.clip(restored, 0, 1), transmission, airlight
 
 
-def local_weights(image, patch=15, radius=20, eps=1e-3):
+def local_weights(image, patch=15, radius=20, eps=1e-3, brightness_coef=1.5, saturation_coef=-1.0,
+                  contrast_coef=-1.0, gradient_coef=-0.5, bias=-0.5):
     """Dense overlapping windows; coefficients are initial, unvalidated defaults."""
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
@@ -55,7 +56,8 @@ def local_weights(image, patch=15, radius=20, eps=1e-3):
     # Fixed scales avoid fitting normalization on test images.
     c = np.clip(contrast / 0.25, 0, 1)
     g = np.clip(gradient / 0.25, 0, 1)
-    score = -0.5 + 1.5 * brightness - saturation - c - 0.5 * g
+    score = (bias + brightness_coef * brightness + saturation_coef * saturation + contrast_coef * c
+             + gradient_coef * g)
     raw = 1 / (1 + np.exp(-score))
     refined = np.clip(guided_filter(gray, raw, radius, eps), 0, 1)
     features = dict(brightness=brightness, saturation=saturation,
@@ -64,7 +66,8 @@ def local_weights(image, patch=15, radius=20, eps=1e-3):
 
 
 def process(image, patch=15, omega=0.95, t_min=0.1, radius=20,
-            eps=1e-3, alpha=0.5):
+            eps=1e-3, alpha=0.5, brightness_coef=1.5, saturation_coef=-1.0, contrast_coef=-1.0,
+            gradient_coef=-0.5, bias=-0.5):
     if image.ndim != 3 or image.shape[2] != 3 or image.size == 0:
         raise ValueError("Expected a nonempty H x W x 3 RGB image")
     if not np.isfinite(image).all() or image.min() < 0 or image.max() > 1:
@@ -75,11 +78,14 @@ def process(image, patch=15, omega=0.95, t_min=0.1, radius=20,
         raise ValueError("Require omega/alpha in [0,1] and t_min in (0,1]")
     image = image.astype(np.float32)
     baseline, transmission, airlight = dcp(image, patch, omega, t_min, radius, eps)
-    weight, raw, features = local_weights(image, patch, radius, eps)
+    weight, raw, features = local_weights(image, patch, radius, eps, brightness_coef=brightness_coef,
+        saturation_coef=saturation_coef, contrast_coef=contrast_coef, gradient_coef=gradient_coef, bias=bias)
     adaptive = (1 - weight[..., None]) * image + weight[..., None] * baseline
     fixed = (1 - alpha) * image + alpha * baseline
-    return dict(original=image, dcp=baseline, fixed=fixed, adaptive=adaptive,
-                weights=weight, raw_weights=raw, transmission=transmission,
+    mean_weight = float(np.mean(weight))
+    matched_fixed = ((1 - mean_weight) * image+ mean_weight * baseline)
+    return dict(original=image, dcp=baseline, fixed=fixed, matched_fixed=matched_fixed,
+                adaptive=adaptive, weights=weight, raw_weights=raw, transmission=transmission,
                 airlight=airlight, **features)
 
 
