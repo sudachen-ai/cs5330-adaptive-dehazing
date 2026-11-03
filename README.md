@@ -4,7 +4,8 @@ Initial implementation for the final-project proposal: a Dark Channel Prior
 (DCP) baseline plus local-feature blending of the original and dehazed image.
 
 **Status:** runnable prototype. The feature coefficients are initial heuristics,
-not trained or validated. No real-image benchmark or improvement claim yet.
+not trained or validated. A reproducible validation benchmark is now available in `reports/validation_default`.
+Held-out testing and parameter selection remain pending; no final improvement claim.
 
 ## Quick start (including VS Code)
 
@@ -74,7 +75,9 @@ This checks that the pipeline runs; it is not a natural-image dataset result.
 - Generated the synthetic example and checked the image-file CLI end to end.
 - Passed four test methods covering constant/black/tiny inputs, blending bounds
   and endpoints, constant guided-filter inputs, and invalid inputs.
-- Real-image evaluation, coefficient tuning, and quantitative comparisons remain pending.
+- Added paired real-image validation evaluation, portable scene-disjoint manifests,
+  parameter/provenance recording, and a matched-mean fixed-blend control.
+- Coefficient tuning, ablations, held-out testing, and the final report remain pending.
 
 ## Next experiments
 
@@ -99,3 +102,34 @@ inputs. Color/gamma handling and real-image behavior still need evaluation.
 
 The Python implementation in this repository was written for this prototype
 with AI assistance. The algorithms above are attributed to their original authors.
+
+## Reproducible real-image evaluation
+
+```bash
+python -m pip install -r requirements-eval.txt
+python prepare_data.py
+python evaluate_dehazing.py --manifest splits/real_haze/validation.csv --output evaluation_results/validation_default
+```
+
+The committed manifests contain 79 validation pairs and 20 held-out test pairs
+from the quarter-size NH-HAZE/O-HAZE directories, using seed 42 and a per-dataset
+80/20 scene split. This non-learned prototype uses the larger partition for
+validation/tuning. Paths are relative to `--data-root`, never machine-specific.
+Scene identity assumes category plus the filename prefix before the first
+underscore; confirm this convention before adding other datasets (especially RESIDE).
+Keep these manifests fixed across experiments. If prior experiments have already
+used these test scenes for tuning, this partition is not an untouched final test;
+agree on fresh held-out data before making a final claim.
+
+Evaluation requires `--manifest` and a new `--output` directory. Optional flags
+include `--patch`, `--omega`, `--alpha`, `--bias`, and the four `--*-coef` values.
+Use `--save-images` for qualitative inspection. Each run saves per-image and
+aggregate PSNR/SSIM CSVs, plots, the exact manifest, and configuration/provenance.
+The base lock file is for the core demo only; `reports/validation_default/environment.txt`
+records the environment used for the validation run.
+
+`matched_fixed` blends with each image's mean adaptive weight. Comparing against
+it helps distinguish spatial placement from simply changing average strength.
+It uses no ground truth, but it is not a validation-tuned global alpha baseline.
+
+See [PROJECT_STATUS.md](PROJECT_STATUS.md) for findings and remaining work.

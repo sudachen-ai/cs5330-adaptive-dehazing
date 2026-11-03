@@ -1,0 +1,26 @@
+{
+  "manifest": "splits/real_haze/validation.csv",
+  "data_root": "datasets/datasets_quarter_size",
+  "output": "evaluation_results/provenance_check",
+  "patch": 15,
+  "omega": 0.95,
+  "alpha": 0.5,
+  "bias": -0.5,
+  "brightness_coef": 1.5,
+  "saturation_coef": -1.0,
+  "contrast_coef": -1.0,
+  "gradient_coef": -0.5,
+  "save_images": false,
+  "t_min": 0.1,
+  "radius": 20,
+  "eps": 0.001,
+  "source_sha256": {
+    "dehaze.py": "00d80d0cd9d21b0227e204e9ca46bc30d7ac55d907c1c7f5df31aef59b65f853",
+    "evaluate_dehazing.py": "ad1c7af1db1ace031ccaf30b20b6eff295dc919d2a11a3b4abdff03f455d5dc3",
+    "prepare_data.py": "28e130f7ed9a14e9e8fce5685c1678471eac70f15b5d45cbb5ab6f15e6bfb613"
+  },
+  "manifest_sha256": "51bea46b40d006e5c74cd6417a36f2840c2e907b928dacf810dbcafbf69fe6ed",
+  "git_commit": "19ba777aa278bc43331c19a43e7041d21beb48e6",
+  "protocol": "RGB float [0,1], PSNR and color SSIM; per-image means",
+  "provenance_note": "Executed from a modified working tree based on git_commit; source_sha256 identifies the exact scripts. Output artifacts copied to reports/validation_default."
+}

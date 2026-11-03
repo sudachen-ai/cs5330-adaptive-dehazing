@@ -4,7 +4,12 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import argparse
+import hashlib
+import subprocess
 
 from skimage.metrics import (
     peak_signal_noise_ratio,
@@ -48,35 +53,16 @@ RADIUS = 20
 EPS = 1e-3
 ALPHA = 0.5
 
-BRIGHTNESS_COEF = 1.5,
-SATURATION_COEF = -1.0,
-CONTRAST_COEF = -1.0,
-GRADIENT_COEF = -0.5,
-BIAS = 0.0
+BRIGHTNESS_COEF = 1.5
+SATURATION_COEF = -1.0
+CONTRAST_COEF = -1.0
+GRADIENT_COEF = -0.5
+BIAS = -0.5
 
 # Set False to save disk space
 SAVE_IMAGES = True
 
-RESULTS_ROOT.mkdir(parents=True, exist_ok=True)
-
-config = {
-    "datasets": DATASETS,
-    "resolution": "quarter",
-    "patch": PATCH,
-    "omega": OMEGA,
-    "t_min": T_MIN,
-    "radius": RADIUS,
-    "eps": EPS,
-    "alpha": ALPHA,
-    "brightness_coef": BRIGHTNESS_COEF,
-    "saturation_coef": SATURATION_COEF,
-    "contrast_coef": CONTRAST_COEF,
-    "gradient_coef": GRADIENT_COEF,
-    "bias": BIAS
-}
-
-with open(RESULTS_ROOT / "config.json", "w") as f:
-    json.dump(config, f, indent=4)
+MANIFEST_PAIRS = None
 
 
 # ============================================================
@@ -128,6 +114,9 @@ def find_image_pairs(dataset_name):
 
     Image extensions may differ.
     """
+
+    if MANIFEST_PAIRS is not None:
+        return [p for p in MANIFEST_PAIRS if p["dataset"] == dataset_name]
 
     dataset_dir = DATASETS_ROOT / dataset_name
 
@@ -561,6 +550,57 @@ def plot_comparison(comparison, metric):
 # ============================================================
 
 def main():
+    global DATASETS_ROOT, RESULTS_ROOT, DATASETS, MANIFEST_PAIRS
+    global PATCH, OMEGA, ALPHA, BIAS, BRIGHTNESS_COEF, SATURATION_COEF
+    global CONTRAST_COEF, GRADIENT_COEF, SAVE_IMAGES
+    parser = argparse.ArgumentParser(description="Evaluate frozen parameters on an explicit split.")
+    parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--data-root", type=Path, default=DATASETS_ROOT)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--patch", type=int, default=PATCH)
+    parser.add_argument("--omega", type=float, default=0.95)
+    parser.add_argument("--alpha", type=float, default=ALPHA)
+    parser.add_argument("--bias", type=float, default=BIAS)
+    parser.add_argument("--brightness-coef", type=float, default=BRIGHTNESS_COEF)
+    parser.add_argument("--saturation-coef", type=float, default=SATURATION_COEF)
+    parser.add_argument("--contrast-coef", type=float, default=CONTRAST_COEF)
+    parser.add_argument("--gradient-coef", type=float, default=GRADIENT_COEF)
+    parser.add_argument("--save-images", action="store_true")
+    args = parser.parse_args()
+    DATASETS_ROOT, RESULTS_ROOT = args.data_root, args.output
+    PATCH, OMEGA, ALPHA, BIAS = args.patch, args.omega, args.alpha, args.bias
+    BRIGHTNESS_COEF, SATURATION_COEF = args.brightness_coef, args.saturation_coef
+    CONTRAST_COEF, GRADIENT_COEF = args.contrast_coef, args.gradient_coef
+    SAVE_IMAGES = args.save_images
+    frame = pd.read_csv(args.manifest, dtype=str)
+    required = {"dataset", "category", "scene_id", "hazy_path", "gt_path"}
+    if not required.issubset(frame.columns) or frame.empty:
+        parser.error("Manifest must be nonempty and contain " + ", ".join(sorted(required)))
+    if frame[list(required)].isna().any().any() or frame.hazy_path.duplicated().any():
+        parser.error("Manifest contains missing values or duplicate hazy paths")
+    MANIFEST_PAIRS = []
+    root = DATASETS_ROOT.resolve()
+    for row in frame.to_dict("records"):
+        for key in ("hazy_path", "gt_path"):
+            path = (root / row[key]).resolve()
+            if not path.is_relative_to(root) or not path.is_file():
+                parser.error(f"Invalid or missing image under data root: {row[key]}")
+            row[key] = path
+        row["image"] = row["hazy_path"].name
+        MANIFEST_PAIRS.append(row)
+    DATASETS = sorted(frame.dataset.unique())
+    if RESULTS_ROOT.exists() and any(RESULTS_ROOT.iterdir()):
+        parser.error("Output directory is nonempty; use a new directory for each experiment")
+    RESULTS_ROOT.mkdir(parents=True, exist_ok=True)
+    config = {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}
+    config.update(t_min=T_MIN, radius=RADIUS, eps=EPS,
+                  source_sha256={name: hashlib.sha256(Path(name).read_bytes()).hexdigest()
+                                 for name in ("dehaze.py", "evaluate_dehazing.py", "prepare_data.py")},
+                  manifest_sha256=hashlib.sha256(args.manifest.read_bytes()).hexdigest(),
+                  git_commit=subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+                  protocol="RGB float [0,1], PSNR and color SSIM; per-image means")
+    (RESULTS_ROOT / "config.json").write_text(json.dumps(config, indent=2) + "\n")
+    frame.to_csv(RESULTS_ROOT / "manifest.csv", index=False)
 
     all_results = []
 
