@@ -47,7 +47,7 @@ Avoid duplicating their ongoing runs.
    directory. Report per-dataset sample counts, PSNR/SSIM, paired differences,
    variability, runtime, and limitations. Never select settings from test scores.
 6. Complete report/slides with method equations, references, results, limitations,
-   individual contributions, and the required AI-assistance disclosure.
+   individual contributions, and any additional course-required material.
 
 The assignment specification and earlier proposed schedule were not supplied;
 this checklist is based on repository evidence, not a claim of rubric compliance.

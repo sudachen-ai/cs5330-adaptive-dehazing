@@ -1,0 +1,14 @@
+[
+  {
+    "dataset": "O-HAZE",
+    "scene_id": "outdoor/022",
+    "image": "O-HAZE/hazy/outdoor/022_hazy_outdoor_ohaze.jpg",
+    "adaptive_minus_tuned_fixed_psnr": 3.520748932286015
+  },
+  {
+    "dataset": "O-HAZE",
+    "scene_id": "outdoor/006",
+    "image": "O-HAZE/hazy/outdoor/006_hazy_outdoor_ohaze.jpg",
+    "adaptive_minus_tuned_fixed_psnr": -3.025155240243386
+  }
+]

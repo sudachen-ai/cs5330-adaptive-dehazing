@@ -1,0 +1,115 @@
+{
+  "manifest": "splits/real_haze/validation.csv",
+  "manifest_sha256": "51bea46b40d006e5c74cd6417a36f2840c2e907b928dacf810dbcafbf69fe6ed",
+  "objective": "maximize mean per-image validation PSNR over both datasets; first listed wins ties",
+  "alphas": [
+    0,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ],
+  "specs": [
+    [
+      "adaptive_default",
+      15,
+      -0.5,
+      {}
+    ],
+    [
+      "no_brightness",
+      15,
+      -0.5,
+      {
+        "brightness_coef": 0.0
+      }
+    ],
+    [
+      "no_saturation",
+      15,
+      -0.5,
+      {
+        "saturation_coef": 0.0
+      }
+    ],
+    [
+      "no_contrast",
+      15,
+      -0.5,
+      {
+        "contrast_coef": 0.0
+      }
+    ],
+    [
+      "no_gradient",
+      15,
+      -0.5,
+      {
+        "gradient_coef": 0.0
+      }
+    ],
+    [
+      "tune_p7_b-1.0",
+      7,
+      -1.0,
+      {}
+    ],
+    [
+      "tune_p7_b-0.5",
+      7,
+      -0.5,
+      {}
+    ],
+    [
+      "tune_p7_b0.0",
+      7,
+      0.0,
+      {}
+    ],
+    [
+      "tune_p15_b-1.0",
+      15,
+      -1.0,
+      {}
+    ],
+    [
+      "tune_p15_b0.0",
+      15,
+      0.0,
+      {}
+    ],
+    [
+      "tune_p31_b-1.0",
+      31,
+      -1.0,
+      {}
+    ],
+    [
+      "tune_p31_b-0.5",
+      31,
+      -0.5,
+      {}
+    ],
+    [
+      "tune_p31_b0.0",
+      31,
+      0.0,
+      {}
+    ]
+  ],
+  "dcp": {
+    "patch": 15,
+    "omega": 0.95,
+    "t_min": 0.1,
+    "radius": 20,
+    "eps": 0.001
+  },
+  "note": "Patch search changes feature windows only; DCP parameters stay fixed. No test evaluation.",
+  "source_sha256": {
+    "dehaze.py": "00d80d0cd9d21b0227e204e9ca46bc30d7ac55d907c1c7f5df31aef59b65f853",
+    "run_validation_study.py": "f1e45048b2c3cfcdb898a8279677daaefea813ee54135b15564c5cd74951f45f"
+  },
+  "selected_fixed": "fixed_0.75",
+  "selected_adaptive": "tune_p31_b0.0",
+  "total_seconds": 68.58376495899938
+}

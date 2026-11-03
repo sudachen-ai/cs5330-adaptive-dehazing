@@ -100,8 +100,7 @@ inputs. Color/gamma handling and real-image behavior still need evaluation.
 - He, Sun, Tang. *Guided Image Filtering*, ECCV 2010.
   [Author paper](https://kaiminghe.github.io/publications/eccv10guidedfilter.pdf)
 
-The Python implementation in this repository was written for this prototype
-with AI assistance. The algorithms above are attributed to their original authors.
+The algorithms above are attributed to their original authors.
 
 ## Reproducible real-image evaluation
 
@@ -133,3 +132,11 @@ it helps distinguish spatial placement from simply changing average strength.
 It uses no ground truth, but it is not a validation-tuned global alpha baseline.
 
 See [PROJECT_STATUS.md](PROJECT_STATUS.md) for findings and remaining work.
+
+## Adaptive-blending validation study
+
+The [validation study](reports/suda_validation_study/ANALYSIS.md) includes fixed-alpha
+comparisons, four feature ablations, a weight-refinement ablation, a small
+feature-window/bias search, and best/worst qualitative cases.
+Run `python run_validation_study.py --output evaluation_results/validation_study`
+after installing `requirements-eval.txt`. Test scenes remain unevaluated.
