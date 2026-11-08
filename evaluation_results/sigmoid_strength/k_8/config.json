@@ -1,0 +1,19 @@
+{
+    "datasets": [
+        "NH-HAZE",
+        "O-HAZE"
+    ],
+    "resolution": "quarter",
+    "patch": 15,
+    "omega": 0.9,
+    "t_min": 0.1,
+    "radius": 20,
+    "eps": 0.001,
+    "alpha": 0.5,
+    "brightness_coef": 1.5,
+    "saturation_coef": -1.0,
+    "contrast_coef": -1.0,
+    "gradient_coef": -0.5,
+    "bias": -0.5,
+    "k": 8.0
+}
