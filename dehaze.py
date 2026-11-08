@@ -41,7 +41,7 @@ def dcp(image, patch=15, omega=0.95, t_min=0.1, radius=20, eps=1e-3):
 
 
 def local_weights(image, patch=15, radius=20, eps=1e-3, brightness_coef=1.5, saturation_coef=-1.0,
-                  contrast_coef=-1.0, gradient_coef=-0.5, bias=-0.5):
+                  contrast_coef=-1.0, gradient_coef=-0.5, bias=-0.5, k=1.0):
     """Dense overlapping windows; coefficients are initial, unvalidated defaults."""
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
@@ -58,7 +58,7 @@ def local_weights(image, patch=15, radius=20, eps=1e-3, brightness_coef=1.5, sat
     g = np.clip(gradient / 0.25, 0, 1)
     score = (bias + brightness_coef * brightness + saturation_coef * saturation + contrast_coef * c
              + gradient_coef * g)
-    raw = 1 / (1 + np.exp(-score))
+    raw = 1 / (1 + np.exp(-np.clip(k * score, -60, 60)))
     refined = np.clip(guided_filter(gray, raw, radius, eps), 0, 1)
     features = dict(brightness=brightness, saturation=saturation,
                     contrast=c, gradient=g)
@@ -67,7 +67,7 @@ def local_weights(image, patch=15, radius=20, eps=1e-3, brightness_coef=1.5, sat
 
 def process(image, patch=15, omega=0.95, t_min=0.1, radius=20,
             eps=1e-3, alpha=0.5, brightness_coef=1.5, saturation_coef=-1.0, contrast_coef=-1.0,
-            gradient_coef=-0.5, bias=-0.5):
+            gradient_coef=-0.5, bias=-0.5, k=1.0):
     if image.ndim != 3 or image.shape[2] != 3 or image.size == 0:
         raise ValueError("Expected a nonempty H x W x 3 RGB image")
     if not np.isfinite(image).all() or image.min() < 0 or image.max() > 1:
@@ -79,7 +79,7 @@ def process(image, patch=15, omega=0.95, t_min=0.1, radius=20,
     image = image.astype(np.float32)
     baseline, transmission, airlight = dcp(image, patch, omega, t_min, radius, eps)
     weight, raw, features = local_weights(image, patch, radius, eps, brightness_coef=brightness_coef,
-        saturation_coef=saturation_coef, contrast_coef=contrast_coef, gradient_coef=gradient_coef, bias=bias)
+        saturation_coef=saturation_coef, contrast_coef=contrast_coef, gradient_coef=gradient_coef, bias=bias, k=k)
     adaptive = (1 - weight[..., None]) * image + weight[..., None] * baseline
     fixed = (1 - alpha) * image + alpha * baseline
     mean_weight = float(np.mean(weight))

@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import cv2
@@ -21,7 +20,7 @@ import json
 # ============================================================
 
 DATASETS_ROOT = Path("datasets/datasets_quarter_size")
-RESULTS_ROOT = Path("evaluation_results/feature_ablation/no_bias")
+RESULTS_ROOT = Path("evaluation_results/brightness/b5")
 
 DATASETS = [
     "NH-HAZE",
@@ -48,11 +47,12 @@ RADIUS = 20
 EPS = 1e-3
 ALPHA = 0.5
 
-BRIGHTNESS_COEF = 1.5,
-SATURATION_COEF = -1.0,
-CONTRAST_COEF = -1.0,
-GRADIENT_COEF = -0.5,
-BIAS = 0.0
+BRIGHTNESS_COEF = 5.0
+SATURATION_COEF = -1.0
+CONTRAST_COEF = -1.0
+GRADIENT_COEF = -0.5
+BIAS = -0.5
+K = 1.0
 
 # Set False to save disk space
 SAVE_IMAGES = True
@@ -72,7 +72,8 @@ config = {
     "saturation_coef": SATURATION_COEF,
     "contrast_coef": CONTRAST_COEF,
     "gradient_coef": GRADIENT_COEF,
-    "bias": BIAS
+    "bias": BIAS,
+    "k": K
 }
 
 with open(RESULTS_ROOT / "config.json", "w") as f:
@@ -275,7 +276,8 @@ def evaluate_dataset(dataset_name):
             saturation_coef=SATURATION_COEF,
             contrast_coef= CONTRAST_COEF,
             gradient_coef=GRADIENT_COEF,
-            bias=BIAS
+            bias=BIAS,
+            k=K
         )
 
         # ----------------------------------------------------
@@ -428,6 +430,7 @@ def create_summary(all_results):
         or column.endswith("_ssim")
         or column.endswith("_gain")
         or column.startswith("adaptive_vs_")
+        or column.startswith("weight_")
     ]
 
     # Mean metrics per dataset
@@ -581,6 +584,33 @@ def main():
         RESULTS_ROOT / "all_image_metrics.csv",
         index=False
     )
+
+    # Dedicated per-image weight statistics
+    weight_columns = [
+        "dataset", "category", "image",
+        "weight_mean", "weight_std", "weight_min", "weight_max"
+    ]
+    combined[weight_columns].to_csv(
+        RESULTS_ROOT / "weight_statistics.csv",
+        index=False
+    )
+
+    # Dataset-level averages and spread across images
+    weight_summary = (
+        combined.groupby("dataset")
+        .agg(
+            image_count=("weight_mean", "size"),
+            mean_weight=("weight_mean", "mean"),
+            mean_spatial_std=("weight_std", "mean"),
+            std_of_image_means=("weight_mean", "std"),
+            lowest_weight=("weight_min", "min"),
+            highest_weight=("weight_max", "max")
+        )
+        .reindex(DATASETS)
+    )
+    weight_summary.to_csv(RESULTS_ROOT / "weight_summary.csv")
+    print("\nWEIGHT STATISTICS BY DATASET")
+    print(weight_summary.round(4).to_string())
 
     comparison = create_summary(combined)
 
