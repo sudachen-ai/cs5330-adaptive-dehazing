@@ -158,6 +158,14 @@ The result from NH-HAZE and O-HAZE does not transfer. On RESIDE outdoor,
 adaptive is 1.2 to 1.5 dB below `matched_fixed`. On RESIDE indoor, plain DCP is
 best by a wide margin and every blend loses to it.
 
+Why: the brightness term raises the weight in bright, flat regions. In
+NH-HAZE and O-HAZE these are mostly dense haze, where DCP helps. In RESIDE
+outdoor they are mostly sky, where DCP over-saturates, so the weight map is
+close to the inverse of a ground-truth oracle weight (correlation -0.89).
+Details, an exact decomposition of the PSNR gap, and example figures:
+[analysis_reside/FINDINGS.md](analysis_reside/FINDINGS.md)
+(`python analyze_reside_failure.py`, about 30 seconds).
+
 ## Known limitations
 
 - The coefficient sweeps were scored on all 99 NH-HAZE and O-HAZE images.
@@ -169,10 +177,9 @@ best by a wide margin and every blend loses to it.
 
 ## Next steps
 
-- Find out why adaptive loses on RESIDE outdoor. Start with the images with
-  the largest `adaptive - matched_fixed` loss in
-  `evaluation_results/reside_heldout/b3/all_image_metrics.csv` and inspect
-  their weight maps, in particular bright sky regions.
+- Lower the weight in sky regions (bright, flat, upper part of the image), or
+  fit the score coefficients to the oracle weight on a training split. See
+  `analysis_reside/FINDINGS.md`.
 - Split NH-HAZE and O-HAZE into validation and test scenes, tune on validation
   only, and report the test numbers.
 - Export a summary table for the saturation sweep.
