@@ -20,7 +20,7 @@ import json
 # ============================================================
 
 DATASETS_ROOT = Path("datasets/datasets_quarter_size")
-RESULTS_ROOT = Path("evaluation_results/brightness/b5")
+RESULTS_ROOT = Path("evaluation_results/")
 
 DATASETS = [
     "NH-HAZE",
@@ -47,10 +47,10 @@ RADIUS = 20
 EPS = 1e-3
 ALPHA = 0.5
 
-BRIGHTNESS_COEF = 5.0
-SATURATION_COEF = -1.0
-CONTRAST_COEF = -1.0
-GRADIENT_COEF = -0.5
+BRIGHTNESS_COEF = 3.0
+SATURATION_COEF = 5.0
+CONTRAST_COEF = -4.0
+GRADIENT_COEF = -2.0
 BIAS = -0.5
 K = 1.0
 
