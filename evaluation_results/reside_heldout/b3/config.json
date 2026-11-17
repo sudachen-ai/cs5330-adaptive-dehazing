@@ -1,0 +1,16 @@
+{
+    "patch": 15,
+    "omega": 0.9,
+    "t_min": 0.1,
+    "radius": 20,
+    "eps": 0.001,
+    "alpha": 0.5,
+    "saturation_coef": -1.0,
+    "contrast_coef": -1.0,
+    "gradient_coef": -0.5,
+    "bias": -0.5,
+    "k": 1.0,
+    "brightness_coef": 3.0,
+    "dataset": "RESIDE",
+    "resolution": "quarter"
+}
